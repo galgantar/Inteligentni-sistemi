@@ -57,6 +57,41 @@ class X(Node):
         return x
 
 
+# probability
+def P(p):
+    return random.rand() < p
+
+def get_random_subtree(t):
+    P_RAND = 0.1
+    if isinstance(t, BinaryOperator):
+        if P(P_RAND):
+            return t
+        if P(0.5):
+            return get_random_subtree(t.left_child)
+        return get_random_subtree(t.right_child)
+    elif isinstance(t, Number) or isinstance(t, X):
+        return t
+    raise NotImplementedError()
+
+def insert_random_subtree(t, s):
+    R_INS = 0.1
+    if isinstance(t, BinaryOperator):
+        if P(R_INS):
+            return s
+        if P(0.5):
+            return insert_random_subtree(t.left_child, s)
+        return insert_random_subtree(t.right_child, s)
+    elif isinstance(t, Number) or isinstance(s, X):
+        return s
+    raise NotImplementedError()
+
+
+def crossover_tree(t1, t2):
+    s1 = get_random_subtree(t1)
+    s2 = get_random_subtree(t2)
+    return insert_random_subtree(t1, s2), insert_random_subtree(t2, s1)
+
+
 def mutate_tree(t):
     P_BINARY_MUT = 0.01
     P_UNARY_MUT = 0.01
@@ -65,7 +100,7 @@ def mutate_tree(t):
     
     if isinstance(t, BinaryOperator):
         # Don't mutate
-        if random.random() >= P_BINARY_MUT:
+        if not P(P_BINARY_MUT):
             return BinaryOperator(
                 t.operator,
                 mutate_tree(t.left_child),
@@ -77,19 +112,16 @@ def mutate_tree(t):
             mutate_tree(t.left_child),
             mutate_tree(t.right_child)
         )
-
     elif isinstance(t, Number):
         # Don't mutate
-        if random.random() >= P_NUMBER_MUT:
+        if not P(P_NUMBER_MUT):
             return t
         # Change random to x
-        if random.random() < P_SWITCH:
+        if P(P_SWITCH):
             return X()
         return Number(random.uniform(-100, 100))
-    
     elif isinstance(t, X):
         return t
-    
     else:
         raise NotImplementedError()
 
