@@ -7,6 +7,10 @@ class Node(ABC):
     def evaluate(self, x):
         pass
 
+    @abstractmethod
+    def __str__(self):
+        pass
+
     # crossover and mutation helper method declarations can be added here
 
 # implementations of Node
@@ -30,6 +34,9 @@ class BinaryOperator(Node):
                 return self.left_child.evaluate(x) ** self.right_child.evaluate(x)
             case _: # default case
                 raise NotImplementedError()
+            
+    def __str__(self):
+        return f"({self.operator} {self.left_child} {self.right_child})"
 
 
 class UnaryOperator(Node):
@@ -41,6 +48,9 @@ class UnaryOperator(Node):
         match(self.operator):
             case _: # default case
                 raise NotImplementedError()
+            
+    def __str__(self):
+        return f"({self.operator} {self.child})"
 
 
 class Number(Node):
@@ -50,9 +60,15 @@ class Number(Node):
     def evaluate(self, x):
         return self.value
     
+    def __str__(self):
+        return f"{self.value}"
+    
 class X(Node):
     def evaluate(self, x):
         return x
+    
+    def __str__(self):
+        return "x"
 
 
 # parser
@@ -90,8 +106,9 @@ if __name__ == "__main__":
 
     # (3 + 5) * x
     test = parsePolishNotationToTree("* + 3 5 x")
-    # Our tree does not implement __eq__ and consequently cannot be compared.
     shouldBeSameAs = BinaryOperator('*', BinaryOperator('+', Number(3.0), Number(5.0)), X())
+    print(test)
+    print(shouldBeSameAs)
 
     # evaluate at x = 5
     print(test.evaluate(5))
