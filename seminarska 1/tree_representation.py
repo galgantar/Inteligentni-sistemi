@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod # abstract classes
 import numpy as np # for fitness function
+import random
+
 
 # base class
 class Node(ABC):
@@ -71,6 +73,43 @@ class X(Node):
         return "x"
 
 
+def mutate_tree(t):
+    P_BINARY_MUT = 0.01
+    P_UNARY_MUT = 0.01
+    P_NUMBER_MUT = 0.01
+    P_SWITCH = 0.001
+    
+    if isinstance(t, BinaryOperator):
+        # Don't mutate
+        if random.random() >= P_BINARY_MUT:
+            return BinaryOperator(
+                t.operator,
+                mutate_tree(t.left_child),
+                mutate_tree(t.right_child)
+        )
+        operators = ['+','-','*','/','*']
+        return BinaryOperator(
+            random.choice(operators),
+            mutate_tree(t.left_child),
+            mutate_tree(t.right_child)
+        )
+
+    elif isinstance(t, Number):
+        # Don't mutate
+        if random.random() >= P_NUMBER_MUT:
+            return t
+        # Change random to x
+        if random.random() < P_SWITCH:
+            return X()
+        return Number(random.uniform(-100, 100))
+    
+    elif isinstance(t, X):
+        return t
+    
+    else:
+        raise NotImplementedError()
+
+
 # parser
 def parsePolishNotationToTree(str):
     def parseTokensToTreePolish(tokens, idx):
@@ -109,6 +148,8 @@ if __name__ == "__main__":
     shouldBeSameAs = BinaryOperator('*', BinaryOperator('+', Number(3.0), Number(5.0)), X())
     print(test)
     print(shouldBeSameAs)
+
+    print("MUTATION", mutate_tree(test))
 
     # evaluate at x = 5
     print(test.evaluate(5))
