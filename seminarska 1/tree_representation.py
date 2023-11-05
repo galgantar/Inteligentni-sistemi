@@ -97,7 +97,7 @@ def insert_random_subtree(t, s):
         if P(0.5):
             return insert_random_subtree(t.left_child, s)
         return insert_random_subtree(t.right_child, s)
-    elif isinstance(t, Number) or isinstance(s, X):
+    elif isinstance(t, Number) or isinstance(t, X):
         return s
     raise NotImplementedError()
 
@@ -109,10 +109,10 @@ def crossover_tree(t1, t2):
 
 
 def mutate_tree(t):
-    P_BINARY_MUT = 0.01
+    P_BINARY_MUT = 0.1
     P_UNARY_MUT = 0.01
-    P_NUMBER_MUT = 0.01
-    P_SWITCH = 0.001
+    P_NUMBER_MUT = 0.1
+    P_SWITCH = 0.1
     
     if isinstance(t, BinaryOperator):
         # Don't mutate
@@ -135,11 +135,26 @@ def mutate_tree(t):
         # Change random to x
         if P(P_SWITCH):
             return X()
-        return Number(random.uniform(-100, 100))
+        return Number(random.uniform(-10, 10))
     elif isinstance(t, X):
         return t
     else:
         raise NotImplementedError()
+
+
+def generate_random_tree(P_ENDTREE):
+    P_X = 0.3
+    operators = ['+','-','*','/','*']
+
+    if P(P_ENDTREE):
+        if P(P_X):
+            return X()
+        return Number(random.uniform(-10, 10))
+    return BinaryOperator(
+        random.choice(operators),
+        generate_random_tree(P_ENDTREE * 1.1),
+        generate_random_tree(P_ENDTREE * 1.1),
+    )
 
 
 # parser
@@ -193,3 +208,12 @@ if __name__ == "__main__":
     true_expression = parsePolishNotationToTree("^ x 2")
     print(fitness(test, xs, ys))
     print(fitness(true_expression, xs, ys))
+
+    for i in range(5):
+        t1 = generate_random_tree(0.3)
+        t2 = generate_random_tree(0.3)
+        print("T1", t1.evaluate(5))
+        print("T2", t2.evaluate(5))
+        t1, t2 = crossover_tree(t1, t2)
+        print("T1 NEW", t1.evaluate(5))
+        print("T2 NEW", t2.evaluate(5))
