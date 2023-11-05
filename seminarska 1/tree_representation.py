@@ -13,6 +13,10 @@ class Node(ABC):
     def __str__(self):
         pass
 
+    @abstractmethod
+    def number_of_nodes(self):
+        pass
+
     # crossover and mutation helper method declarations can be added here
 
 # implementations of Node
@@ -34,11 +38,18 @@ class BinaryOperator(Node):
                 return self.left_child.evaluate(x) / self.right_child.evaluate(x)
             case '^':
                 return self.left_child.evaluate(x) ** self.right_child.evaluate(x)
+            case 'max':
+                return np.maximum(self.left_child.evaluate(x), self.right_child.evaluate(x))
+            case 'min':
+                return np.minimum(self.left_child.evaluate(x), self.right_child.evaluate(x))
             case _: # default case
                 raise NotImplementedError()
             
     def __str__(self):
         return f"({self.operator} {self.left_child} {self.right_child})"
+    
+    def number_of_nodes(self):
+        return 1 + self.left_child.number_of_nodes() + self.right_child.number_of_nodes()
 
 
 class UnaryOperator(Node):
@@ -48,11 +59,28 @@ class UnaryOperator(Node):
 
     def evaluate(self, x):
         match(self.operator):
+            case 'sin':
+                return np.sin(self.child.evaluate(x))
+            case 'cos':
+                return np.cos(self.child.evaluate(x))
+            case 'exp':
+                return np.exp(self.child.evaluate(x))
+            case 'log':
+                return np.log(self.child.evaluate(x))
+            case 'sqrt':
+                return np.sqrt(self.child.evaluate(x))
+            case 'abs':
+                return np.abs(self.child.evaluate(x))
+            case 'neg':
+                return -self.child.evaluate(x)
             case _: # default case
                 raise NotImplementedError()
             
     def __str__(self):
         return f"({self.operator} {self.child})"
+    
+    def number_of_nodes(self):
+        return 1 + self.child.number_of_nodes()
 
 
 class Number(Node):
@@ -65,12 +93,18 @@ class Number(Node):
     def __str__(self):
         return f"{self.value}"
     
+    def number_of_nodes(self):
+        return 1
+    
 class X(Node):
     def evaluate(self, x):
         return x
     
     def __str__(self):
         return "x"
+    
+    def number_of_nodes(self):
+        return 1
 
 
 # probability
@@ -184,7 +218,8 @@ def parsePolishNotationToTree(str):
 
 # fitness function
 def fitness(tree, xs, ys):
-    return -np.sum(np.square(ys - tree.evaluate(xs)))
+    LONG_EQUATION_PENALTY = 0.01
+    return -np.sum(np.square(ys - tree.evaluate(xs))) - LONG_EQUATION_PENALTY * tree.number_of_nodes()
 
 
 # main (for testing purposes)
