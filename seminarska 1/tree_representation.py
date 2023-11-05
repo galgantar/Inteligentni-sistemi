@@ -75,7 +75,7 @@ class X(Node):
 
 # probability
 def P(p):
-    return random.rand() < p
+    return random.random() < p
 
 def get_random_subtree(t):
     P_RAND = 0.1
