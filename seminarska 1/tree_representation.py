@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod # abstract classes
+import numpy as np # for fitness function
 
 # base class
 class Node(ABC):
@@ -58,7 +59,7 @@ class X(Node):
 def parsePolishNotationToTree(str):
     def parseTokensToTreePolish(tokens, idx):
         match(tokens[idx]):
-            case '+' | '-' | '*' | '/' | '*': 
+            case '+' | '-' | '*' | '/' | '^': 
                 operator = tokens[idx]
                 idx = idx + 1
 
@@ -79,6 +80,10 @@ def parsePolishNotationToTree(str):
     tree, _ = parseTokensToTreePolish(tokens, 0)
     return tree
 
+# fitness function
+def fitness(tree, xs, ys):
+    return -np.sum(np.square(ys - tree.evaluate(xs)))
+
 
 # main (for testing purposes)
 if __name__ == "__main__":
@@ -91,3 +96,10 @@ if __name__ == "__main__":
     # evaluate at x = 5
     print(test.evaluate(5))
     print(shouldBeSameAs.evaluate(5))
+
+    # test fitness function
+    xs = np.array([1, 2, 3])
+    ys = np.array([1, 4, 9])
+    true_expression = parsePolishNotationToTree("^ x 2")
+    print(fitness(test, xs, ys))
+    print(fitness(true_expression, xs, ys))
