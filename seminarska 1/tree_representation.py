@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod # abstract classes
 import numpy as np # for fitness function
 import random
 
+INT_ARRAY_SIZE = 1000
 
 # base class
 class Node(ABC):
@@ -46,7 +47,7 @@ class BinaryOperator(Node):
                 raise NotImplementedError()
             
     def __str__(self):
-        return f"({self.operator} {self.left_child} {self.right_child})"
+        return f"{self.operator} {self.left_child} {self.right_child}"
     
     def number_of_nodes(self):
         return 1 + self.left_child.number_of_nodes() + self.right_child.number_of_nodes()
@@ -77,7 +78,7 @@ class UnaryOperator(Node):
                 raise NotImplementedError()
             
     def __str__(self):
-        return f"({self.operator} {self.child})"
+        return f"{self.operator} {self.child}"
     
     def number_of_nodes(self):
         return 1 + self.child.number_of_nodes()
@@ -221,6 +222,15 @@ def fitness(tree, xs, ys):
     LONG_EQUATION_PENALTY = 0.01
     return -np.sum(np.square(ys - tree.evaluate(xs))) - LONG_EQUATION_PENALTY * tree.number_of_nodes()
 
+def toIntArray(tree):
+    bytes = str(tree).encode('utf-8')
+    arr = np.zeros(INT_ARRAY_SIZE, dtype=np.int8)
+    for i in range(len(bytes)):
+        arr[i] = bytes[i]
+    return arr
+
+def fromIntArray(arr):
+    return parsePolishNotationToTree(arr.tobytes().decode('utf-8').replace('\x00', ''))
 
 # main (for testing purposes)
 if __name__ == "__main__":
@@ -252,3 +262,6 @@ if __name__ == "__main__":
         t1, t2 = crossover_tree(t1, t2)
         print("T1 NEW", t1.evaluate(5))
         print("T2 NEW", t2.evaluate(5))
+
+    print("int array: ", toIntArray(test))
+    print("from int array: ", fromIntArray(toIntArray(test)))
