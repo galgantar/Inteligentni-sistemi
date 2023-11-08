@@ -92,7 +92,7 @@ class Number(Node):
         return self.value
     
     def __str__(self):
-        return f"{self.value}"
+        return f"{self.value:.2f}"
     
     def number_of_nodes(self):
         return 1
@@ -157,7 +157,7 @@ def mutate_tree(t):
                 mutate_tree(t.left_child),
                 mutate_tree(t.right_child)
         )
-        operators = ['+','-','*','/','*']
+        operators = ['+','-','*','/','^']
         return BinaryOperator(
             random.choice(operators),
             mutate_tree(t.left_child),
@@ -179,7 +179,7 @@ def mutate_tree(t):
 
 def generate_random_tree(P_ENDTREE):
     P_X = 0.3
-    operators = ['+','-','*','/','*']
+    operators = ['+','-','*','/','^']
 
     if P(P_ENDTREE):
         if P(P_X):
@@ -220,7 +220,15 @@ def parsePolishNotationToTree(str):
 # fitness function
 def fitness(tree, xs, ys):
     LONG_EQUATION_PENALTY = 0.01
-    return -np.sum(np.square(ys - tree.evaluate(xs))) - LONG_EQUATION_PENALTY * tree.number_of_nodes()
+    try:
+        fitness = -np.sum(np.square(ys - tree.evaluate(xs)))
+    except:
+        fitness = -np.inf
+    
+    if np.isfinite(fitness) and not np.iscomplexobj(fitness):
+        return fitness - LONG_EQUATION_PENALTY * tree.number_of_nodes()
+    else:
+        return -np.inf
 
 def toIntArray(tree):
     bytes = str(tree).encode('utf-8')
