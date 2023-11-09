@@ -17,15 +17,22 @@ class Node(ABC):
     @abstractmethod
     def number_of_nodes(self):
         pass
+    
+    @abstractmethod
+    def list_of_nodes(self):
+        pass
 
     # crossover and mutation helper method declarations can be added here
 
 # implementations of Node
 class BinaryOperator(Node):
     def __init__(self, operator, left_child, right_child):
+        self.parent = None
         self.operator = operator
         self.right_child = right_child
         self.left_child = left_child
+        left_child.parent = self
+        right_child.parent = self
 
     def evaluate(self, x):
         match(self.operator):
@@ -51,12 +58,17 @@ class BinaryOperator(Node):
     
     def number_of_nodes(self):
         return 1 + self.left_child.number_of_nodes() + self.right_child.number_of_nodes()
+    
+    def list_of_nodes(self):
+        return [self] + self.left_child.list_of_nodes() + self.right_child.list_of_nodes()
 
 
 class UnaryOperator(Node):
     def __init__(self, operator, child):
+        self.parent = None
         self.operator = operator
         self.child = child
+        child.parent = self
 
     def evaluate(self, x):
         match(self.operator):
@@ -82,10 +94,14 @@ class UnaryOperator(Node):
     
     def number_of_nodes(self):
         return 1 + self.child.number_of_nodes()
+    
+    def list_of_nodes(self):
+        return [self] + self.child.list_of_nodes()
 
 
 class Number(Node):
     def __init__(self, value):
+        self.parent = None
         self.value = value
 
     def evaluate(self, x):
@@ -97,7 +113,13 @@ class Number(Node):
     def number_of_nodes(self):
         return 1
     
+    def list_of_nodes(self):
+        return [self]
+    
 class X(Node):
+    def __init__(self):
+        self.parent = None
+    
     def evaluate(self, x):
         return x
     
@@ -106,41 +128,44 @@ class X(Node):
     
     def number_of_nodes(self):
         return 1
+    
+    def list_of_nodes(self):
+        return [self]
 
 
 # probability
 def P(p):
     return random.random() < p
 
-def get_random_subtree(t, P_RAND):
-    if isinstance(t, BinaryOperator):
-        if P(P_RAND):
-            return t
-        if P(0.5):
-            return get_random_subtree(t.left_child, P_RAND * 1.1)
-        return get_random_subtree(t.right_child, P_RAND * 1.1)
-    elif isinstance(t, Number) or isinstance(t, X):
-        return t
-    raise NotImplementedError()
-
-def insert_random_subtree(t, s, R_INS):
-    if isinstance(t, BinaryOperator):
-        if P(R_INS):
-            return s
-        if P(0.5):
-            return insert_random_subtree(t.left_child, s, R_INS * 1.1)
-        return insert_random_subtree(t.right_child, s, R_INS * 1.1)
-    elif isinstance(t, Number) or isinstance(t, X):
-        return s
-    raise NotImplementedError()
-
+def get_random_subtree(t):
+    l = t.list_of_nodes()
+    return random.choice(l[1:])
+    
+def switch(s1, s2):
+    p1 = s1.parent
+    p2 = s2.parent
+    
+    if p1.left_child == s1:
+        p1.left_child = s2
+    else:
+        p1.right_child = s2
+    
+    if p2.left_child == s2:
+        p2.left_child = s1
+    else:
+        p2.right_child = s1
+    
+    s1.parent = p2
+    s2.parent = p1
+    
 
 def crossover_tree(t1, t2):
-    P_RAND = 0.1
-    P_INS = 0.1
-    s1 = get_random_subtree(t1, P_RAND)
-    s2 = get_random_subtree(t2, P_RAND)
-    return insert_random_subtree(t1, s2, P_INS), insert_random_subtree(t2, s1, P_INS)
+    s1 = get_random_subtree(t1)
+    s2 = get_random_subtree(t2)
+    
+    switch(s1, s2)
+    
+    return t1, t2
 
 
 def mutate_tree(t):
@@ -238,9 +263,9 @@ def parsePolishNotationToTree(str):
 
 # fitness function
 def fitness(tree, xs, ys):
-    LONG_EQUATION_PENALTY = 0.0001
+    LONG_EQUATION_PENALTY = 0.01
     try:
-        fitness = -np.sum(np.abs(ys - tree.evaluate(xs)))
+        fitness = -np.sum(np.square(ys - tree.evaluate(xs)))
     except:
         fitness = -np.inf
     
