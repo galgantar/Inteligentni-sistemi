@@ -32,7 +32,7 @@ class BinaryOperator(Node):
             case '+':
                 return self.left_child.evaluate(x) + self.right_child.evaluate(x)
             case '-':
-                return self.left_child.evaluate(x) + self.right_child.evaluate(x)
+                return self.left_child.evaluate(x) - self.right_child.evaluate(x)
             case '*':
                 return self.left_child.evaluate(x) * self.right_child.evaluate(x)
             case '/':
@@ -112,35 +112,35 @@ class X(Node):
 def P(p):
     return random.random() < p
 
-def get_random_subtree(t):
-    P_RAND = 0.1
+def get_random_subtree(t, P_RAND):
     if isinstance(t, BinaryOperator):
         if P(P_RAND):
             return t
         if P(0.5):
-            return get_random_subtree(t.left_child)
-        return get_random_subtree(t.right_child)
+            return get_random_subtree(t.left_child, P_RAND * 1.1)
+        return get_random_subtree(t.right_child, P_RAND * 1.1)
     elif isinstance(t, Number) or isinstance(t, X):
         return t
     raise NotImplementedError()
 
-def insert_random_subtree(t, s):
-    R_INS = 0.1
+def insert_random_subtree(t, s, R_INS):
     if isinstance(t, BinaryOperator):
         if P(R_INS):
             return s
         if P(0.5):
-            return insert_random_subtree(t.left_child, s)
-        return insert_random_subtree(t.right_child, s)
+            return insert_random_subtree(t.left_child, s, R_INS * 1.1)
+        return insert_random_subtree(t.right_child, s, R_INS * 1.1)
     elif isinstance(t, Number) or isinstance(t, X):
         return s
     raise NotImplementedError()
 
 
 def crossover_tree(t1, t2):
-    s1 = get_random_subtree(t1)
-    s2 = get_random_subtree(t2)
-    return insert_random_subtree(t1, s2), insert_random_subtree(t2, s1)
+    P_RAND = 0.1
+    P_INS = 0.1
+    s1 = get_random_subtree(t1, P_RAND)
+    s2 = get_random_subtree(t2, P_RAND)
+    return insert_random_subtree(t1, s2, P_INS), insert_random_subtree(t2, s1, P_INS)
 
 
 def mutate_tree(t):
@@ -148,7 +148,8 @@ def mutate_tree(t):
     P_UNARY_MUT = 0.01
     P_NUMBER_MUT = 0.1
     P_SWITCH = 0.1
-    
+    P_ADD = 0.7
+
     if isinstance(t, BinaryOperator):
         # Don't mutate
         if not P(P_BINARY_MUT):
@@ -158,19 +159,37 @@ def mutate_tree(t):
                 mutate_tree(t.right_child)
         )
         operators = ['+','-','*','/','^']
+        operator = t.operator
+        if P(P_BINARY_MUT):
+            operator = random.choice(operators)
+
         return BinaryOperator(
-            random.choice(operators),
+            operator,
             mutate_tree(t.left_child),
             mutate_tree(t.right_child)
         )
     elif isinstance(t, Number):
+        operators = ['+','-','*','/','^']
         # Don't mutate
         if not P(P_NUMBER_MUT):
             return t
         # Change random to x
         if P(P_SWITCH):
             return X()
-        return Number(random.uniform(-10, 10))
+        if P(P_ADD):
+            subtrees = [t, Number(random.randint(-10, 10))]
+            random.shuffle(subtrees)
+            return BinaryOperator(
+                random.choice(operators),
+                *subtrees
+                )
+
+        if t.value == -10:
+            return Number(-9)
+        elif t.value == 10:
+            return Number(9)
+        else:
+            return Number(t.value + random.randint(-1, 1))
     elif isinstance(t, X):
         return t
     else:
@@ -184,7 +203,7 @@ def generate_random_tree(P_ENDTREE):
     if P(P_ENDTREE):
         if P(P_X):
             return X()
-        return Number(random.uniform(-10, 10))
+        return Number(random.randint(-10, 10))
     return BinaryOperator(
         random.choice(operators),
         generate_random_tree(P_ENDTREE * 1.1),
@@ -219,14 +238,14 @@ def parsePolishNotationToTree(str):
 
 # fitness function
 def fitness(tree, xs, ys):
-    LONG_EQUATION_PENALTY = 0.01
+    LONG_EQUATION_PENALTY = 0.0001
     try:
-        fitness = -np.sum(np.square(ys - tree.evaluate(xs)))
+        fitness = -np.sum(np.abs(ys - tree.evaluate(xs)))
     except:
         fitness = -np.inf
     
     if np.isfinite(fitness) and not np.iscomplexobj(fitness):
-        return fitness - LONG_EQUATION_PENALTY * tree.number_of_nodes()
+        return fitness * (1 + LONG_EQUATION_PENALTY * tree.number_of_nodes())
     else:
         return -np.inf
 
