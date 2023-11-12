@@ -139,11 +139,14 @@ def P(p):
 
 def get_random_subtree(t):
     l = t.list_of_nodes()
-    return random.choice(l[1:])
+    return random.choice(l)
     
 def switch(s1, s2):
     p1 = s1.parent
     p2 = s2.parent
+    
+    if p1 is None or p2 is None:
+        return
     
     if p1.left_child == s1:
         p1.left_child = s2
@@ -169,56 +172,21 @@ def crossover_tree(t1, t2):
 
 
 def mutate_tree(t):
-    P_BINARY_MUT = 0.1
-    P_UNARY_MUT = 0.01
-    P_NUMBER_MUT = 0.1
-    P_SWITCH = 0.1
-    P_ADD = 0.7
-
-    if isinstance(t, BinaryOperator):
-        # Don't mutate
-        if not P(P_BINARY_MUT):
-            return BinaryOperator(
-                t.operator,
-                mutate_tree(t.left_child),
-                mutate_tree(t.right_child)
-        )
-        operators = ['+','-','*','/','^']
-        operator = t.operator
-        if P(P_BINARY_MUT):
-            operator = random.choice(operators)
-
-        return BinaryOperator(
-            operator,
-            mutate_tree(t.left_child),
-            mutate_tree(t.right_child)
-        )
-    elif isinstance(t, Number):
-        operators = ['+','-','*','/','^']
-        # Don't mutate
-        if not P(P_NUMBER_MUT):
-            return t
-        # Change random to x
-        if P(P_SWITCH):
-            return X()
-        if P(P_ADD):
-            subtrees = [t, Number(random.randint(-10, 10))]
-            random.shuffle(subtrees)
-            return BinaryOperator(
-                random.choice(operators),
-                *subtrees
-                )
-
-        if t.value == -10:
-            return Number(-9)
-        elif t.value == 10:
-            return Number(9)
-        else:
-            return Number(t.value + random.randint(-1, 1))
-    elif isinstance(t, X):
-        return t
+    l = t.list_of_nodes()
+    s = random.choice(l)
+    
+    if isinstance(s, BinaryOperator):
+        s.operator = random.choice(['+','-','*','/','^'])
+    elif isinstance(s, UnaryOperator):
+        s.operator = random.choice(['sin','cos','exp','log','sqrt','abs','neg'])
+    elif isinstance(s, Number):
+        s.value = random.randint(-10, 10)
+    elif isinstance(s, X):
+        pass
     else:
         raise NotImplementedError()
+    
+    return t
 
 
 def generate_random_tree(P_ENDTREE):
