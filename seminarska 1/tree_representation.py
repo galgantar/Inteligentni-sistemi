@@ -231,7 +231,7 @@ def parsePolishNotationToTree(str):
 
 # fitness function
 def fitness(tree, xs, ys):
-    LONG_EQUATION_PENALTY = 0.01
+    LONG_EQUATION_PENALTY = 0.00001
     try:
         fitness = -np.sum(np.square(ys - tree.evaluate(xs)))
     except:
