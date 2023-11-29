@@ -22,6 +22,14 @@ class Node(ABC):
     def list_of_nodes(self):
         pass
 
+    @abstractmethod
+    def contains_x(self):
+        pass
+
+    @abstractmethod
+    def simplify(self):
+        pass
+
     # crossover and mutation helper method declarations can be added here
 
 # implementations of Node
@@ -61,7 +69,20 @@ class BinaryOperator(Node):
     
     def list_of_nodes(self):
         return [self] + self.left_child.list_of_nodes() + self.right_child.list_of_nodes()
+    
+    def contains_x(self):
+        return self.right_child.contains_x() or self.left_child.contains_x()
 
+    def simplify(self):
+        if not self.right_child.contains_x():
+            self.right_child = Number(self.right_child.evaluate(float("inf")))
+        else:
+            self.right_child.simplify()
+
+        if not self.left_child.contains_x():
+            self.left_child = Number(self.left_child.evaluate(float("inf")))
+        else:
+            self.left_child.simplify()
 
 class UnaryOperator(Node):
     def __init__(self, operator, child):
@@ -97,6 +118,12 @@ class UnaryOperator(Node):
     
     def list_of_nodes(self):
         return [self] + self.child.list_of_nodes()
+    
+    def contains_x(self):
+        return self.child.contains_x()
+    
+    def simplify(self):
+        pass
 
 
 class Number(Node):
@@ -116,6 +143,12 @@ class Number(Node):
     def list_of_nodes(self):
         return [self]
     
+    def contains_x(self):
+        return False
+
+    def simplify(self):
+        pass
+
 class X(Node):
     def __init__(self):
         self.parent = None
@@ -131,6 +164,12 @@ class X(Node):
     
     def list_of_nodes(self):
         return [self]
+    
+    def contains_x(self):
+        return True
+
+    def simplify(self):
+        pass
 
 
 # probability
@@ -256,32 +295,37 @@ def fromIntArray(arr):
 if __name__ == "__main__":
 
     # (3 + 5) * x
-    test = parsePolishNotationToTree("* + 3 5 x")
-    shouldBeSameAs = BinaryOperator('*', BinaryOperator('+', Number(3.0), Number(5.0)), X())
-    print(test)
-    print(shouldBeSameAs)
+    # test = parsePolishNotationToTree("* + 3 5 x")
+    # shouldBeSameAs = BinaryOperator('*', BinaryOperator('+', Number(3.0), Number(5.0)), X())
+    # print(test)
+    # print(shouldBeSameAs)
 
-    print("MUTATION", mutate_tree(test))
+    # print("MUTATION", mutate_tree(test))
 
-    # evaluate at x = 5
-    print(test.evaluate(5))
-    print(shouldBeSameAs.evaluate(5))
+    # # evaluate at x = 5
+    # print(test.evaluate(5))
+    # print(shouldBeSameAs.evaluate(5))
 
-    # test fitness function
-    xs = np.array([1, 2, 3])
-    ys = np.array([1, 4, 9])
-    true_expression = parsePolishNotationToTree("^ x 2")
-    print(fitness(test, xs, ys))
-    print(fitness(true_expression, xs, ys))
+    # # test fitness function
+    # xs = np.array([1, 2, 3])
+    # ys = np.array([1, 4, 9])
+    # true_expression = parsePolishNotationToTree("^ x 2")
+    # print(fitness(test, xs, ys))
+    # print(fitness(true_expression, xs, ys))
 
-    for i in range(5):
-        t1 = generate_random_tree(0.3)
-        t2 = generate_random_tree(0.3)
-        print("T1", t1.evaluate(5))
-        print("T2", t2.evaluate(5))
-        t1, t2 = crossover_tree(t1, t2)
-        print("T1 NEW", t1.evaluate(5))
-        print("T2 NEW", t2.evaluate(5))
+    # for i in range(5):
+    #     t1 = generate_random_tree(0.3)
+    #     t2 = generate_random_tree(0.3)
+    #     print("T1", t1.evaluate(5))
+    #     print("T2", t2.evaluate(5))
+    #     t1, t2 = crossover_tree(t1, t2)
+    #     print("T1 NEW", t1.evaluate(5))
+    #     print("T2 NEW", t2.evaluate(5))
 
-    print("int array: ", toIntArray(test))
-    print("from int array: ", fromIntArray(toIntArray(test)))
+    # print("int array: ", toIntArray(test))
+    # print("from int array: ", fromIntArray(toIntArray(test)))
+
+    test = parsePolishNotationToTree("* + x 5 6")
+    print(test.contains_x(), test.evaluate(12))
+    test.simplify()
+    print(test, test.evaluate(12))
