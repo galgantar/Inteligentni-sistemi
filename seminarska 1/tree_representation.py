@@ -5,7 +5,7 @@ import random
 INT_ARRAY_SIZE = 1000
 P_GENERATION_X = 0.1
 P_ENDTREE_INIT = 0.3
-LONG_EQUATION_PENALTY = 0.01
+LONG_EQUATION_PENALTY = 0.001
 
 
 # base class
@@ -25,7 +25,6 @@ class Node(ABC):
     @abstractmethod
     def list_of_nodes(self):
         pass
-
 
 
 # implementations of Node
@@ -188,7 +187,7 @@ def mutate_tree(t):
     elif isinstance(s, UnaryOperator):
         s.operator = random.choice(['sin','cos','exp','log','sqrt','abs','neg'])
     elif isinstance(s, Number):
-        s.value = random.randint(-10, 10)
+        s.value += random.randint(-1, 1)
     elif isinstance(s, X):
         pass
     else:
