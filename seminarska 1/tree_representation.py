@@ -2,14 +2,15 @@ from abc import ABC, abstractmethod # abstract classes
 import numpy as np # for fitness function
 import random
 
-INT_ARRAY_SIZE = 1000
-P_GENERATION_X = 0.1
-P_ENDTREE_INIT = 0.3
-LONG_EQUATION_PENALTY = 0.01
 
 
 # base class
 class Node(ABC):
+    INT_ARRAY_SIZE = 1000
+    P_GENERATION_X = 0.1
+    P_ENDTREE_INIT = 0.3
+    LONG_EQUATION_PENALTY = 0.0001
+
     @abstractmethod
     def evaluate(self, x):
         pass
@@ -25,7 +26,6 @@ class Node(ABC):
     @abstractmethod
     def list_of_nodes(self):
         pass
-
 
 
 # implementations of Node
@@ -193,7 +193,7 @@ def mutate_tree(t):
     elif isinstance(s, UnaryOperator):
         s.operator = random.choice(['sin','cos','exp','log','sqrt','abs','neg'])
     elif isinstance(s, Number):
-        s.value = random.randint(-10, 10)
+        s.value += random.choice([-1, 1])
     elif isinstance(s, X):
         pass
     else:
@@ -205,10 +205,10 @@ def mutate_tree(t):
 def generate_random_tree(P_ENDTREE = None):
     binary_operators = ['+','-','*','/','^','max','min']
     unary_operators = ['sin','cos','exp','log','sqrt','abs','neg']
-    P_ENDTREE = P_ENDTREE_INIT if P_ENDTREE == None else P_ENDTREE
+    P_ENDTREE = Node.P_ENDTREE_INIT if P_ENDTREE == None else P_ENDTREE
 
     if P(P_ENDTREE):
-        if P(P_GENERATION_X):
+        if P(Node.P_GENERATION_X):
             return X()
         return Number(random.randint(-10, 10))
 
@@ -266,14 +266,14 @@ def fitness(tree, xs, ys):
         fitness = -np.inf
     
     if np.isfinite(fitness) and not np.iscomplexobj(fitness):
-        penalty = LONG_EQUATION_PENALTY * tree.number_of_nodes()
+        penalty = Node.LONG_EQUATION_PENALTY * tree.number_of_nodes()
         return fitness * (1 + penalty) - penalty
     else:
         return -np.inf
 
 def toIntArray(tree):
     bytes = str(tree).encode('utf-8')
-    arr = np.zeros(INT_ARRAY_SIZE, dtype=np.int8)
+    arr = np.zeros(Node.INT_ARRAY_SIZE, dtype=np.int8)
     for i in range(len(bytes)):
         arr[i] = bytes[i]
     return arr
