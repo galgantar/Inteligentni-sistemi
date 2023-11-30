@@ -187,16 +187,21 @@ def switch(s1, s2):
     if p1 is None or p2 is None:
         return
     
-    if p1.left_child == s1:
-        p1.left_child = s2
-    else:
-        p1.right_child = s2
+    if p1 is BinaryOperator:
+        if p1.left_child == s1:
+            p1.left_child = s2
+        else:
+            p1.right_child = s2
+        
+        if p2.left_child == s2:
+            p2.left_child = s1
+        else:
+            p2.right_child = s1
     
-    if p2.left_child == s2:
-        p2.left_child = s1
-    else:
-        p2.right_child = s1
-    
+    elif p1 is UnaryOperator:
+        p1.child = s2
+        p2.child = s1
+
     s1.parent = p2
     s2.parent = p1
     
@@ -215,7 +220,7 @@ def mutate_tree(t):
     s = random.choice(l)
     
     if isinstance(s, BinaryOperator):
-        s.operator = random.choice(['+','-','*','/','^'])
+        s.operator = random.choice(['+','-','*','/','^','max','min'])
     elif isinstance(s, UnaryOperator):
         s.operator = random.choice(['sin','cos','exp','log','sqrt','abs','neg'])
     elif isinstance(s, Number):
@@ -230,24 +235,33 @@ def mutate_tree(t):
 
 def generate_random_tree(P_ENDTREE):
     P_X = 0.3
-    operators = ['+','-','*','/','^']
+    binary_operators = ['+','-','*','/','^','max','min']
+    unary_operators = ['sin','cos','exp','log','sqrt','abs','neg']
 
     if P(P_ENDTREE):
         if P(P_X):
             return X()
         return Number(random.randint(-10, 10))
-    return BinaryOperator(
-        random.choice(operators),
-        generate_random_tree(P_ENDTREE * 1.1),
-        generate_random_tree(P_ENDTREE * 1.1),
-    )
+
+    op = random.choice(binary_operators + unary_operators)
+    if op in unary_operators:
+        return UnaryOperator(
+            op,
+            generate_random_tree(P_ENDTREE * 1.1),
+        )
+    else:
+        return BinaryOperator(
+            op,
+            generate_random_tree(P_ENDTREE * 1.1),
+            generate_random_tree(P_ENDTREE * 1.1),
+        )
 
 
 # parser
 def parsePolishNotationToTree(str):
     def parseTokensToTreePolish(tokens, idx):
         match(tokens[idx]):
-            case '+' | '-' | '*' | '/' | '^': 
+            case '+' | '-' | '*' | '/' | '^' | 'max' | 'min': 
                 operator = tokens[idx]
                 idx = idx + 1
 
@@ -255,6 +269,13 @@ def parsePolishNotationToTree(str):
                 right_child, idx = parseTokensToTreePolish(tokens, idx)
 
                 return BinaryOperator(operator, left_child, right_child), idx
+            case 'sin' | 'cos' | 'exp' | 'log' | 'sqrt' | 'abs' | 'neg':
+                operator = tokens[idx]
+                idx = idx + 1
+
+                child, idx = parseTokensToTreePolish(tokens, idx)
+
+                return UnaryOperator(operator, child), idx
             case 'x':
                 # x = tokens[idx]
                 idx = idx + 1
@@ -329,3 +350,9 @@ if __name__ == "__main__":
     print(test.contains_x(), test.evaluate(12))
     test.simplify()
     print(test, test.evaluate(12))
+    
+    for i in range(500):
+        test = generate_random_tree(0.3)
+        print(test)
+        print(test.evaluate(5))
+
