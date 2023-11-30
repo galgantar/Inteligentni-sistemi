@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod # abstract classes
 import numpy as np # for fitness function
 import random
 
+# treat warnings as errors
+import warnings
+warnings.filterwarnings("error")
 
 
 # base class
