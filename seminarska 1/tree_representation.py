@@ -266,7 +266,8 @@ def fitness(tree, xs, ys):
         fitness = -np.inf
     
     if np.isfinite(fitness) and not np.iscomplexobj(fitness):
-        return fitness * (1 + Node.LONG_EQUATION_PENALTY * tree.number_of_nodes())
+        penalty = Node.LONG_EQUATION_PENALTY * tree.number_of_nodes()
+        return fitness * (1 + penalty) - penalty
     else:
         return -np.inf
 
