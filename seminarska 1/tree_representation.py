@@ -10,6 +10,7 @@ class Node(ABC):
     P_GENERATION_X = 0.1
     P_ENDTREE_INIT = 0.3
     LONG_EQUATION_PENALTY = 0.0001
+    ENABLE_EXTRA_OPERATORS = True
 
     @abstractmethod
     def evaluate(self, x):
@@ -189,7 +190,10 @@ def mutate_tree(t):
     s = random.choice(l)
     
     if isinstance(s, BinaryOperator):
-        s.operator = random.choice(['+','-','*','/','^','max','min'])
+        if not Node.ENABLE_EXTRA_OPERATORS:
+            s.operator = random.choice(['+','-','*','/','^'])
+        else:
+            s.operator = random.choice(['+','-','*','/','^','max','min'])
     elif isinstance(s, UnaryOperator):
         s.operator = random.choice(['sin','cos','exp','log','sqrt','abs','neg'])
     elif isinstance(s, Number):
@@ -203,7 +207,8 @@ def mutate_tree(t):
 
 
 def generate_random_tree(P_ENDTREE = None):
-    binary_operators = ['+','-','*','/','^','max','min']
+    default_operators = ['+','-','*','/','^']
+    extra_binary_operators = ['max','min']
     unary_operators = ['sin','cos','exp','log','sqrt','abs','neg']
     P_ENDTREE = Node.P_ENDTREE_INIT if P_ENDTREE == None else P_ENDTREE
 
@@ -211,8 +216,10 @@ def generate_random_tree(P_ENDTREE = None):
         if P(Node.P_GENERATION_X):
             return X()
         return Number(random.randint(-10, 10))
-
-    op = random.choice(binary_operators + unary_operators)
+    if not Node.ENABLE_EXTRA_OPERATORS:
+        op = random.choice(default_operators)
+    else:
+        op = random.choice(default_operators + extra_binary_operators + unary_operators)
     if op in unary_operators:
         return UnaryOperator(
             op,
