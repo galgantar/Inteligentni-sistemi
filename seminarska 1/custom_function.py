@@ -12,7 +12,7 @@ def arr_str(arr):
 
     return s
 
-functions = ["sin x", "cos x", "exp x", "log x", "sqrt x", "abs x", "neg x"]
+functions = ["sin x", "cos x", "exp x", "log x", "sqrt x", "abs x", "neg x", "+ log + x 1 exp x", "+ exp x sin + x 1", "sin exp x", "abs sin x", "+ sin x cos x", "+ sin x exp neg x", "abs - x 9", "* log sqrt x 8", "sin * sin x 3"]
 
 with open("custom_dataset.csv", "w") as file:
     writer = csv.writer(file, lineterminator="\n")
