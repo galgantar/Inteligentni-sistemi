@@ -4,7 +4,7 @@ import torch
 from bs4 import BeautifulSoup
 import requests
 
-df = pd.read_json("News_Category_Dataset_IS_course_preprocessed.csv")
+df = pd.read_csv("News_Category_Dataset_IS_course_preprocessed.csv")
 
 # Load pre-trained model for both title/description and text embeddings
 model = SentenceTransformer('all-MiniLM-L6-v2')
